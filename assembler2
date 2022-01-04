@@ -1,0 +1,476 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+char delimeter[]=" \t\n";
+char hexaDeciNum[10];
+
+
+struct input
+{
+    char locctr[100];
+    char label[100];
+    char opcode[100];
+    char operand[100];
+};
+
+struct optabdetails
+{
+    char mnemonic[100];
+    char value[100];
+};
+
+struct symtabdetails
+{
+    char sv[100];
+    char label[100];
+};
+
+struct records
+{
+    char headend[100];
+};
+
+struct textrecords
+{
+    char text[100];
+};
+
+struct objectCode
+{
+    char oc[100];
+};
+
+void decToHexa(int n)
+{
+    char mytemp;
+    char temporary[6];
+
+    int i = 0,x,j,k=0,mod,y;
+    if(n==0)
+    {
+        for(int j=0;j<6;j++)
+            hexaDeciNum[j]='0';
+        hexaDeciNum[6]='\0';
+
+    }
+    while (n != 0) {
+        int temp = 0;
+        temp = n % 16;
+
+
+        if (temp < 10) {
+            hexaDeciNum[i] = temp + 48;
+            i++;
+        }
+        else {
+            hexaDeciNum[i] = temp + 55;
+            i++;
+        }
+
+        n = n / 16;
+    }
+    if(i)
+    {
+        hexaDeciNum[i]='\0';
+    }
+
+    int l=0;
+    int h=strlen(hexaDeciNum)-1;
+    while(l<h)
+    {
+        mytemp = hexaDeciNum[l];
+        hexaDeciNum[l]=hexaDeciNum[h];
+        hexaDeciNum[h]=mytemp;
+        l++;
+        h--;
+    }
+}
+
+int hextodec(char hex[100])
+{
+    long int decimal=0,i,base=1;
+    int length=strlen(hex);
+    for(i = length--; i >= 0; i--)
+    {
+        if(hex[i] >= '0' && hex[i] <= '9')
+        {
+            decimal += (hex[i] - 48) * base;
+            base *= 16;
+        }
+        else if(hex[i] >= 'A' && hex[i] <= 'F')
+        {
+            decimal += (hex[i] - 55) * base;
+            base *= 16;
+        }
+        else if(hex[i] >= 'a' && hex[i] <= 'f')
+        {
+            decimal += (hex[i] - 97) * base;
+            base *= 16;
+        }
+    }
+    return decimal;
+}
+
+int funCount(struct objectCode* o,int n,int j)
+{
+    int i,l,c=0;
+    for(i=j;i<n;i++)
+    {
+        if(strcasecmp(o[i].oc,"EMPTY")==0)
+        {
+            return c;
+        }
+        else
+        {
+            l=strlen(o[i].oc);
+            if(c<=30)
+            {
+
+                c=c+(l/2);
+            }
+        }
+
+    }
+}
+
+int readIntermediate(FILE *fp1,struct input* a)
+{
+    char dataToRead[50];
+    int c,i=0;
+    const char* token;
+    const char* temp[4]={""};
+     while(fgets(dataToRead,50,fp1)!=NULL)
+     {
+         c=0;
+         temp[0] = temp[1] = temp[2] = temp[3] = " ";
+         token=strtok(dataToRead,delimeter);
+         while(token)
+         {
+             temp[c]=token;
+             c++;
+             token=strtok(NULL,delimeter);
+         }
+         if(c==4)
+         {
+             strcpy(a[i].locctr,temp[0]);
+             strcpy(a[i].label,temp[1]);
+             strcpy(a[i].opcode,temp[2]);
+             strcpy(a[i].operand,temp[3]);
+         }
+         else if(c==3)
+         {
+             strcpy(a[i].locctr,temp[0]);
+             strcpy(a[i].opcode,temp[1]);
+             strcpy(a[i].operand,temp[2]);
+         }
+         else if(c==2)
+         {
+             strcpy(a[i].locctr,temp[0]);
+             strcpy(a[i].opcode,temp[1]);
+         }
+         else
+         {
+             strcpy(a[i].locctr,temp[0]);
+         }
+         i++;
+     }
+     return (i);
+}
+
+void displayIntermediate(const struct input* a,int n)
+{
+    for(int i=0;i<n;i++)
+    {
+        printf("%s\t%s\t%s\t%s\n",a[i].locctr,a[i].label,a[i].opcode,a[i].operand);
+    }
+}
+
+int readOptab(FILE* fp2,struct optabdetails* b)
+{
+    char dataToRead[50];
+    int c,i=0;
+    const char* token;
+    const char* temp[2]={""};
+    char mytemp[5];
+     while(fgets(dataToRead,50,fp2)!=NULL)
+     {
+         c=0;
+         temp[0] = temp[1] =  " ";
+         token=strtok(dataToRead,delimeter);
+         while(token)
+         {
+             temp[c]=token;
+             c++;
+             token=strtok(NULL,delimeter);
+         }
+         if(c==2)
+         {
+             strcpy(b[i].mnemonic,temp[0]);
+             strcpy(b[i].value,temp[1]);
+         }
+         i++;
+     }
+     return i;
+}
+
+int readSymtab(FILE* fp3,struct symtabdetails* c)
+{
+    char dataToRead[50];
+    int d,i=0;
+    const char* token;
+    const char* temp[2]={""};
+    char mytemp[5];
+     while(fgets(dataToRead,50,fp3)!=NULL)
+     {
+        d=0;
+         temp[0] = temp[1] =  " ";
+         token=strtok(dataToRead,delimeter);
+         while(token)
+         {
+             temp[d]=token;
+             d++;
+             token=strtok(NULL,delimeter);
+         }
+         if(d==2)
+         {
+             strcpy(c[i].sv,temp[0]);
+             strcpy(c[i].label,temp[1]);
+         }
+         i++;
+     }
+     return i;
+}
+
+void writeHeadEndRecord(struct input* a,int ni,struct records *d)
+{
+     int length,ans1,ans2;
+     char temp[10];
+    if(strcasecmp(a[0].opcode,"START")==0)
+    {
+        strcpy(d[0].headend,"H");
+        strcat(d[0].headend," ");
+        strcat(d[0].headend,a[0].label);
+        strcat(d[0].headend," ");
+        strcat(d[0].headend,a[0].operand);
+        strcat(d[0].headend," ");
+        strcpy(temp,a[0].operand);
+        ans1=hextodec(temp);
+        strcpy(temp,a[ni-1].locctr);
+        ans2=hextodec(temp);
+        length=ans2-ans1;
+        decToHexa(length);
+        strcat(d[0].headend,hexaDeciNum);
+        hexaDeciNum[0]='\0';
+        temp[0]='\0';
+    }
+    strcpy(d[1].headend,"E");
+    strcat(d[1].headend," ");
+    strcat(d[1].headend,a[0].operand);
+    printf("Header:%s\n",d[0].headend);
+    printf("Ender:%s\n",d[1].headend);
+}
+
+int writeObjectCode(struct input* a,int ni,struct optabdetails* b,int no,struct symtabdetails* c,int ns,struct objectCode* o)
+{
+    int i,j=0,k=0,p,q,z,y,e,v;
+     int flag=0;
+    char temp[10];
+    for(i=1;i<ni;i++)
+    {
+       y=strlen(a[i].operand);
+       if(a[i].operand[0]=='X')
+        {
+            for(int x=2;x<(strlen(a[i].operand)-1);x++)
+            {
+                temp[k]=a[i].operand[x];
+                k++;
+            }
+            temp[k]='\0';
+            strcpy(o[j].oc,temp);
+            temp[0]='\0';
+            k=0;
+
+        }
+       else if(strcmp(a[i].opcode,"RESW")==0|| strcmp(a[i].opcode,"RESB")==0||strcmp(a[i].opcode,"END")==0)
+        {
+            strcpy(o[j].oc,"Null");
+
+        }
+        else if(strcmp(a[i].opcode,"WORD")==0)
+        {
+            z=atoi(a[i].operand);
+            decToHexa(z);
+            e=strlen(hexaDeciNum);
+            e=6-e;
+
+            for(v=0;v<e;v++){
+                strcat(o[j].oc,"0");
+            }
+            strcat(o[j].oc,hexaDeciNum);
+
+            hexaDeciNum[0]='\0';
+        }
+        else if(strcmp(a[i].opcode,"RSUB")==0)
+        {
+            strcpy(o[j].oc,"4C0000");
+
+        }
+        else if(a[i].operand[0]=='C'&&a[i].operand[1]=='\'')
+        {
+            int s=2,v,w;
+            w=strlen(a[i].operand)-1;
+            while(s<w)
+            {
+                v=a[i].operand[s];
+                decToHexa(v);
+                if(s==2)
+                    strcpy(o[j].oc,hexaDeciNum);
+                else
+                    strcat(o[j].oc,hexaDeciNum);
+                s++;
+            }
+        }
+        else
+        {
+           for(p=0;p<no;p++)
+           {
+               if(!strcmp(a[i].opcode,b[p].mnemonic))
+                {
+                    strcpy(o[j].oc,b[p].value);
+                }
+
+           }
+
+           for(q=0;q<ns;q++)
+           {
+               flag=0;
+               if(!strcmp(a[i].operand,c[q].sv))
+                {
+                    strcat(o[j].oc,c[q].label);
+                    flag=1;
+                    break;
+                   // printf("%s",c[q].label);
+                }
+
+        }
+           if(flag==0){
+            strcat(o[j].oc,"0000");
+        }
+
+        }
+      j++;
+
+    }
+    return j;
+}
+
+void displayObjectCode(struct objectCode* o,int n)
+{
+     for(int i=0;i<n;i++)
+    {
+        printf("%s\n",o[i].oc);
+    }
+}
+
+int writeTextRecord(struct objectCode* o,int n,struct input* a,int ni,struct textrecords* t)
+{
+    int i,c=0,c1=0,l,d=0,k=0,x=0,ec=0,m=1;
+
+    for(i=0;i<n;i++)
+    {
+        if(strcasecmp(o[i].oc,"Null")==0)
+        {
+            ec++;
+            c=0;
+            d=0;
+            k++;
+            k=k/ec;
+            m++;
+        }
+        else
+        {
+            l=strlen(o[i].oc);
+            c=c+(l/2);
+
+            if(c<=30)
+            {
+                if(d==0)
+
+                {
+                    c1=funCount(o,n,i);
+                    decToHexa(c1);
+                    strcpy(t[k].text,"T");
+                    strcat(t[k].text," ");
+                    strcat(t[k].text,a[m].locctr);
+                    strcat(t[k].text," ");
+                    strcat(t[k].text,hexaDeciNum);
+                    strcat(t[k].text," ");
+                    hexaDeciNum[0]='\0';
+                    d=1;
+                    x++;
+                }
+                strcat(t[k].text,o[i].oc);
+                strcat(t[k].text," ");
+                m++;
+            }
+            else if(c>30)
+            {
+                c=0;d=0;k++;
+            }
+        }
+    }
+    return x;
+}
+
+void displayTextRecord(struct textrecords* t,int n)
+{
+  for(int i=0;i<n;i++)
+    {
+        printf("%s\n",t[i].text);
+    }
+}
+
+void writeObjProgFile(FILE* fp4,struct records* d,struct textrecords* t,int n)
+{
+    fprintf(fp4,"%s\n",d[0].headend);
+    for(int i=0;i<n;i++)
+        fprintf(fp4,"%s\n",t[i].text);
+    fprintf(fp4,"%s\n",d[1].headend);
+}
+
+int main()
+{
+    FILE *fp1,*fp2,*fp3,*fp4;
+    int ni,no,ns,n,nt;
+    struct input a[100];
+    struct optabdetails b[100];
+    struct symtabdetails c[100];
+    struct records d[2];
+    struct textrecords t[100];
+    struct objectCode o[100];
+
+    fp1=fopen("intermediate.txt","r");
+    if(fp1==NULL)
+    {
+        perror("File intermediate.txt is not found!!\n");
+        exit(0);
+    }
+    else
+        printf("File opened successfully\n");
+    fp2=fopen("optab.txt","r");
+    fp3=fopen("symtab.txt","r");
+    fp4=fopen("objprog.txt","w");
+
+    ni=readIntermediate(fp1,a);
+    displayIntermediate(a,ni);
+    no=readOptab(fp2,b);
+    ns=readSymtab(fp3,c);
+    writeHeadEndRecord(a,ni,d);
+    n=writeObjectCode(a,ni,b,no,c,ns,o);
+    displayObjectCode(o,n);
+    nt=writeTextRecord(o,n,a,ni,t);
+    displayTextRecord(t,nt);
+    writeObjProgFile(fp4,d,t,nt);
+    return 0;
+}
